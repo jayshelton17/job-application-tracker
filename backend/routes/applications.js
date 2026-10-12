@@ -20,9 +20,12 @@ router.post("/", async (req, res) => {
 
     const result = await db.query(
       `INSERT INTO applications
-				(user_id, company, position, status, date_applied)
+        (user_id, company_name, job_title, status, applied_at)
 			 VALUES ($1, $2, $3, $4, $5)
-			 RETURNING *`,
+       RETURNING *,
+          company_name AS company,
+          job_title AS position,
+          applied_at AS date_applied`,
       [
         req.userId,
         company,
@@ -47,6 +50,9 @@ router.get("/", async (req, res) => {
   try {
     const result = await db.query(
       `SELECT *
+       , company_name AS company
+       , job_title AS position
+       , applied_at AS date_applied
 			 FROM applications
 			 WHERE user_id = $1
 			 ORDER BY id DESC`,
@@ -70,6 +76,9 @@ router.get("/:id", async (req, res) => {
 
     const result = await db.query(
       `SELECT *
+       , company_name AS company
+       , job_title AS position
+       , applied_at AS date_applied
 			 FROM applications
 			 WHERE id = $1
 			   AND user_id = $2`,
@@ -101,6 +110,9 @@ router.patch("/:id", async (req, res) => {
 
     const currentApplication = await db.query(
       `SELECT *
+       , company_name AS company
+       , job_title AS position
+       , applied_at AS date_applied
 			 FROM applications
 			 WHERE id = $1
 			   AND user_id = $2`,
@@ -115,23 +127,26 @@ router.patch("/:id", async (req, res) => {
 
     const current = currentApplication.rows[0];
 
-    const updatedCompany = company ?? current.company;
+    const updatedCompany = company ?? current.company_name;
 
-    const updatedPosition = position ?? current.position;
+    const updatedPosition = position ?? current.job_title;
 
     const updatedStatus = status ?? current.status;
 
-    const updatedDate = date_applied ?? current.date_applied;
+    const updatedDate = date_applied ?? current.applied_at;
 
     const result = await db.query(
       `UPDATE applications
-			 SET company = $1,
-			     position = $2,
+       SET company_name = $1,
+           job_title = $2,
 			     status = $3,
-			     date_applied = $4
+           applied_at = $4
 			 WHERE id = $5
 			   AND user_id = $6
-			 RETURNING *`,
+       RETURNING *,
+          company_name AS company,
+          job_title AS position,
+          applied_at AS date_applied`,
       [
         updatedCompany,
         updatedPosition,

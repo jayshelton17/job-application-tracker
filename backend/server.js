@@ -1,6 +1,7 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const express = require("express");
+const db = require("./db");
 
 const authRoutes = require("./routes/auth");
 const usersRoutes = require("./routes/users");
@@ -23,6 +24,26 @@ app.get("/", (req, res) => {
   res.json({
     message: "Job Application Tracker API is running",
   });
+});
+
+// Test Neon PostgreSQL connection
+app.get("/api/test-db", async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT NOW() AS current_time, current_database() AS database",
+    );
+
+    res.json({
+      message: "Successfully connected to Neon!",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Database connection error:", error);
+
+    res.status(500).json({
+      error: "Failed to connect to Neon database",
+    });
+  }
 });
 
 app.listen(PORT, () => {

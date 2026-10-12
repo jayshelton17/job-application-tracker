@@ -6,6 +6,14 @@ const router = express.Router();
 const db = require("../db");
 const authMiddleware = require("../middleware/authMiddleware");
 
+function requireJwtSecret(res) {
+  if (process.env.JWT_SECRET) return true;
+
+  res.status(500).json({
+    error: "Authentication is not configured: JWT_SECRET is missing",
+  });
+  return false;
+}
 
 // REGISTER
 router.post("/register", async (req, res) => {
@@ -18,6 +26,8 @@ router.post("/register", async (req, res) => {
         error: "Email, username, and password are required",
       });
     }
+
+    if (!requireJwtSecret(res)) return;
 
     // Check if email already exists
     const existingEmail = await db.query(
@@ -85,6 +95,8 @@ router.post("/login", async (req, res) => {
         error: "Email and password required",
       });
     }
+
+    if (!requireJwtSecret(res)) return;
 
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
